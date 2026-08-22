@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JurisFlow</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14202E">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JurisFlow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#F7F4EE;
+    --panel:#FFFFFF;
+    --ink:#14202E;
+    --brass:#B08D57;
+    --brass-dark:#8C6F3F;
+    --crimson:#8C2F39;
+    --slate:#5C6470;
+    --border:#DDD6C8;
+    --border-soft:#EAE5D9;
+    --green:#3E6B4F;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  button{font-family:inherit;cursor:pointer;}
+  a{color:inherit;}
+  ::selection{background:var(--brass);color:#fff;}
+
+  /* ---- Login ---- */
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:32px;padding:24px;}
+  .brand-mark{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .brand-mark .stamp{width:64px;height:64px;border:3px double var(--brass);border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);}
+  .brand-mark .stamp span{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11px;letter-spacing:1px;color:var(--brass-dark);}
+  .brand-mark h1{font-size:34px;margin:6px 0 0;letter-spacing:0.5px;}
+  .brand-mark .tagline{color:var(--slate);font-size:13px;font-style:italic;letter-spacing:0.3px;}
+  .login-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:32px;width:100%;max-width:380px;box-shadow:0 2px 12px rgba(20,32,46,0.06);}
+  .login-card h3{margin:0 0 4px;font-size:16px;}
+  .login-card p{color:var(--slate);font-size:12.5px;margin:0 0 20px;}
+  .user-btn{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:10px;background:var(--parchment);border:1px solid var(--border-soft);border-radius:3px;text-align:left;transition:border-color .15s,background .15s;}
+  .user-btn:hover{border-color:var(--brass);background:#fff;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Source Serif 4',serif;font-size:14px;flex-shrink:0;}
+  .user-btn .name{font-weight:600;font-size:13.5px;}
+  .user-btn .role{color:var(--slate);font-size:11.5px;}
+
+  /* ---- App shell ---- */
+  #app{display:none;min-height:100vh;}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;}
+  .topbar .brand{display:flex;align-items:center;gap:10px;font-family:'Source Serif 4',serif;font-size:18px;letter-spacing:0.3px;}
+  .topbar .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--brass);}
+  .topbar nav{display:flex;gap:4px;}
+  .topbar nav button{background:none;border:none;color:#C9CFD8;padding:8px 14px;font-size:13px;font-weight:500;border-radius:3px;letter-spacing:0.2px;}
+  .topbar nav button.active{color:#fff;background:rgba(255,255,255,0.09);}
+  .topbar nav button:hover{color:#fff;}
+  .topbar .who{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#C9CFD8;}
+  .topbar .who .avatar{width:26px;height:26px;font-size:11px;}
+  .topbar .logout{background:none;border:1px solid rgba(255,255,255,0.2);color:#C9CFD8;padding:5px 10px;border-radius:3px;font-size:11.5px;}
+
+  main{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+  .page-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+  .page-head h2{font-size:24px;margin:0;}
+  .page-head .sub{color:var(--slate);font-size:12.5px;margin-top:2px;}
+  .btn-primary{background:var(--ink);color:#fff;border:none;padding:9px 16px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:0.2px;}
+  .btn-primary:hover{background:#243449;}
+  .btn-secondary{background:none;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:3px;font-size:13px;}
+  .btn-secondary:hover{border-color:var(--brass);}
+
+  .grid{display:grid;gap:16px;}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:2fr 1fr;}
+  @media(max-width:860px){.grid-3{grid-template-columns:1fr;}.grid-2{grid-template-columns:1fr;}}
+
+  .card{background:var(--panel);border:1px solid var(--border-soft);border-radius:4px;padding:18px;}
+  .card h3{margin:0 0 14px;font-size:14px;text-transform:uppercase;letter-spacing:0.6px;color:var(--slate);font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+  .stat{font-family:'Source Serif 4',serif;font-size:32px;line-height:1;}
+  .stat-label{color:var(--slate);font-size:12px;margin-top:4px;}
+
+  .list-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-soft);gap:10px;}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .primary{font-weight:600;font-size:13px;}
+  .list-row .meta{color:var(--slate);font-size:11.5px;margin-top:2px;}
+  .empty{color:var(--slate);font-size:12.5px;padding:16px 0;text-align:center;}
+
+  /* Stamp badges — signature element */
+  .stamp-badge{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;border:2.5px double currentColor;transform:rotate(-6deg);flex-shrink:0;}
+  .stamp-badge span{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:9px;letter-spacing:0.8px;text-transform:uppercase;text-align:center;line-height:1.15;}
+  .stamp-sm{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;border:1px solid currentColor;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+  .c-active{color:var(--green);} .c-pending{color:var(--brass-dark);} .c-archived{color:var(--slate);} .c-urgent{color:var(--crimson);}
+  .c-todo{color:var(--slate);} .c-inprogress{color:var(--brass-dark);} .c-completed{color:var(--green);}
+
+  .matter-card{background:var(--panel);border:1px solid var(--border-soft);border-radius:4px;padding:16px 18px;margin-bottom:10px;display:flex;gap:16px;align-items:center;transition:border-color .15s;}
+  .matter-card:hover{border-color:var(--brass);cursor:pointer;}
+  .matter-card .num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);}
+  .matter-card h4{margin:2px 0 4px;font-size:15.5px;font-family:'Source Serif 4',serif;}
+  .matter-card .meta{color:var(--slate);font-size:12px;}
+  .matter-card .tags{margin-left:auto;display:flex;gap:8px;flex-shrink:0;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(20,32,46,0.45);z-index:50;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+  .modal{background:#fff;border-radius:5px;max-width:560px;width:100%;padding:26px;margin-top:10px;}
+  .modal h3{margin:0 0 18px;font-size:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--slate);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;}
+  .field input,.field select,.field textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:3px;font-family:inherit;font-size:13px;background:var(--parchment);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .close-x{position:absolute;top:16px;right:18px;background:none;border:none;font-size:20px;color:var(--slate);}
+
+  .detail-back{color:var(--slate);font-size:12.5px;margin-bottom:12px;display:inline-block;}
+  .timeline-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-soft);}
+  .timeline-item:last-child{border-bottom:none;}
+  .timeline-dot{width:7px;height:7px;border-radius:50%;background:var(--brass);margin-top:5px;flex-shrink:0;}
+  .timeline-item .txt{font-size:13px;}
+  .timeline-item .when{color:var(--slate);font-size:11px;margin-top:1px;}
+
+  .task-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft);}
+  .task-row:last-child{border-bottom:none;}
+  .task-check{width:18px;height:18px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .task-check.done{background:var(--green);border-color:var(--green);color:#fff;font-size:11px;}
+  .task-row .t-title{font-size:13px;font-weight:500;}
+  .task-row.done .t-title{text-decoration:line-through;color:var(--slate);}
+  .task-row .t-meta{color:var(--slate);font-size:11px;margin-top:2px;}
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .filter-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;background:var(--panel);}
+  .filter-chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .search-bar{margin-bottom:16px;}
+  .search-bar input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:3px;font-size:13px;background:var(--panel);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="brand-mark">
+    <div class="stamp"><span>JF · EST<br>2026</span></div>
+    <h1>JurisFlow</h1>
+    <div class="tagline">One Firm. Every Matter. Always in Flow.</div>
+  </div>
+  <div class="login-card">
+    <h3>Sign in</h3>
+    <p>Prototype workspace — select your profile to continue.</p>
+    <div id="user-list"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>JurisFlow</div>
+    <nav id="main-nav">
+      <button data-page="dashboard" class="active">Dashboard</button>
+      <button data-page="matters">Matters</button>
+      <button data-page="tasks">Tasks</button>
+      <button data-page="documents">Documents</button>
+      <button data-page="research">Research</button>
+      <button data-page="judgments">Judgments</button>
+      <button data-page="notices">Notices</button>
+      <button data-page="team">Team</button>
+      <button data-page="targets">Targets</button>
+      <button data-page="search">Search</button>
+    </nav>
+    <button class="logout" id="notif-btn" style="margin-right:10px;position:relative;">🔔 <span id="notif-count" style="display:none;background:var(--crimson);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;"></span></button>
+    <button class="logout" id="enable-notifs-btn" style="margin-right:10px;display:none;">Enable Alerts</button>
+    <button class="logout" id="install-btn" style="margin-right:10px;display:none;">Install App</button>
+    <div class="who">
+      <span id="conn-status" class="mono" style="font-size:11px;margin-right:4px;"></span>
+      <div class="avatar" id="who-avatar"></div>
+      <span id="who-name"></span>
+      <button class="logout" id="logout-btn">Switch user</button>
+    </div>
+  </div>
+  <main id="main-content"></main>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal-content" style="position:relative;"></div>
+</div>
+
+<script>
+let USERS = [];
+const DEFAULT_TEAM = [
+  {id:'chetan', name:'Adv. Chetan Nagare', isAdmin:true},
+  {id:'esheta', name:'Adv. Esheta Lunkad', isAdmin:false},
+  {id:'sagar',  name:'Adv. Sagar Kolhatkar', isAdmin:false},
+  {id:'smruti', name:'Smruti Mehta', isAdmin:false}
+];
+const STORE_KEY = 'jf-store';
+let state = { matters: [], tasks: [], activity: [], documents: [], targets: [], notifsRead: [], research: [], notices: [], judgments: [] };
+let currentUser = null;
+let currentPage = 'dashboard';
+
+function initials(name){ return name.replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){ if(!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+let isOnline = navigator.onLine;
+let pendingSync = false;
+let offlineDirty = false;
+
+function updateConnStatus(){
+  const el = document.getElementById('conn-status');
+  if(!el) return;
+  if(isOnline){
+    el.textContent = pendingSync ? '● Syncing…' : '● Online';
+    el.style.color = pendingSync ? 'var(--brass)' : 'var(--green)';
+  } else {
+    el.textContent = '○ Offline';
+    el.style.color = 'var(--crimson)';
+  }
+}
+window.addEventListener('online', async ()=>{ isOnline = true; updateConnStatus(); if(offlineDirty) await saveStore(); });
+window.addEventListener('offline', ()=>{ isOnline = false; updateConnStatus(); });
+
+async function loadStore(){
+  try{
+    const res = await window.storage.get(STORE_KEY, true);
+    if(res && res.value){ state = JSON.parse(res.value); }
+  }catch(e){ console.log('No existing store yet, starting fresh.'); }
+  state.documents = state.documents || [];
+  state.targets = state.targets || [];
+  state.notifsRead = state.notifsRead || [];
+  state.team = (state.team && state.team.length) ? state.team : DEFAULT_TEAM.slice();
+  state.research = state.research || [];
+  state.notices = state.notices || [];
+  state.judgments = state.judgments || [];
+  USERS = state.team;
+}
+async function saveStore(){
+  if(!isOnline){ offlineDirty = true; updateConnStatus(); return; }
+  try{
+    pendingSync = true; updateConnStatus();
+    await window.storage.set(STORE_KEY, JSON.stringify(state), true);
+    offlineDirty = false;
+  }catch(e){
+    console.error('Storage save failed, will retry when connection is stable', e);
+    offlineDirty = true;
+  } finally {
+    pendingSync = false; updateConnStatus();
+  }
+}
+// Poll for changes made by other logged-in team members so the shared workspace feels near-real-time.
+setInterval(async ()=>{
+  if(!isOnline || !currentUser) return;
+  if(document.getElementById('modal-bg').style.display === 'flex') return; // don't disrupt active editing
+  try{
+    const res = await window.storage.get(STORE_KEY, true);
+    if(res && res.value){
+      const incoming = JSON.parse(res.value);
+      incoming.documents = incoming.documents || [];
+      incoming.targets = incoming.targets || [];
+      incoming.notifsRead = incoming.notifsRead || [];
+      incoming.team = (incoming.team && incoming.team.length) ? incoming.team : USERS;
+      incoming.research = incoming.research || [];
+      incoming.notices = incoming.notices || [];
+      incoming.judgments = incoming.judgments || [];
+      state = incoming;
+      USERS = state.team;
+      renderPage();
+    }
+  }catch(e){ /* transient — will retry on next poll */ }
+}, 6000);
+function logActivity(text){
+  state.activity.unshift({id:uid(), text, actor: currentUser.name, ts: new Date().toISOString()});
+  state.activity = state.activity.slice(0, 40);
+}
+
+// ---- Login ----
+function renderLogin(){
+  const list = document.getElementById('user-list');
+  list.innerHTML = USERS.map(u => `
+    <button class="user-btn" data-uid="${u.id}">
+      <div class="avatar">${initials(u.name)}</div>
+      <div><div class="name">${u.name}</div>${u.role ? `<div class="role">${u.role}</div>` : ''}</div>
+    </button>`).join('');
+  list.querySelectorAll('.user-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentUser = USERS.find(u=>u.id===btn.dataset.uid);
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('who-avatar').textContent = initials(currentUser.name);
+      document.getElementById('who-name').textContent = currentUser.name;
+      updateConnStatus();
+      checkAndFireNotifications();
+      renderPage();
+    });
+  });
+}
+document.getElementById('logout-btn').addEventListener('click', ()=>{
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  currentUser = null;
+});
+
+// ---- Nav ----
+document.getElementById('main-nav').addEventListener('click', (e)=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentPage = e.target.dataset.page;
+  renderPage();
+});
+document.getElementById('notif-btn').addEventListener('click', ()=>{
+  document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
+  currentPage = 'notifications';
+  renderPage();
+});
+function updateNotifBadge(){
+  const n = getNotifications().filter(x=>!state.notifsRead.includes(x.id));
+  const el = document.getElementById('notif-count');
+  if(n.length){ el.style.display='inline'; el.textContent = n.length; } else { el.style.display='none'; }
+}
+
+function renderPage(){
+  const main = document.getElementById('main-content');
+  if(currentPage==='dashboard') main.innerHTML = pageDashboard();
+  else if(currentPage==='matters') main.innerHTML = pageMatters();
+  else if(currentPage==='tasks') main.innerHTML = pageTasks();
+  else if(currentPage==='matter-detail') main.innerHTML = pageMatterDetail(window.__activeMatterId);
+  else if(currentPage==='documents') main.innerHTML = pageDocuments();
+  else if(currentPage==='research') main.innerHTML = pageResearch();
+  else if(currentPage==='judgments') main.innerHTML = pageJudgments();
+  else if(currentPage==='notices') main.innerHTML = pageNotices();
+  else if(currentPage==='team') main.innerHTML = pageTeam();
+  else if(currentPage==='targets') main.innerHTML = pageTargets();
+  else if(currentPage==='search') main.innerHTML = pageSearch();
+  else if(currentPage==='notifications') main.innerHTML = pageNotifications();
+  attachPageHandlers();
+  updateNotifBadge();
+}
+
+// ---- Dashboard ----
+function pageDashboard(){
+  const today = todayStr();
+  const myTasks = state.tasks.filter(t=>t.assignee===currentUser.id && t.status!=='completed');
+  const overdue = myTasks.filter(t=>t.due && t.due < today);
+  const dueToday = myTasks.filter(t=>t.due===today);
+  const upcomingHearings = state.matters.filter(m=>m.nextHearing && m.nextHearing >= today).sort((a,b)=>a.nextHearing.localeCompare(b.nextHearing)).slice(0,5);
+  const activeMatters = state.matters.filter(m=>m.status==='active').length;
+
+  return `
+    <div class="page-head">
+      <div><h2>Today's Briefing</h2><div class="sub">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} — welcome back, ${currentUser.name.split(' ')[0]}</div></div>
+    </div>
+    <div class="grid grid-3" style="margin-bottom:16px;">
+      <div class="card"><h3>Active Matters</h3><div class="stat">${activeMatters}</div><div class="stat-label">across the firm</div></div>
+      <div class="card"><h3>Your Open Tasks</h3><div class="stat">${myTasks.length}</div><div class="stat-label">${dueToday.length} due today</div></div>
+      <div class="card"><h3>Overdue</h3><div class="stat" style="color:${overdue.length?'var(--crimson)':'inherit'}">${overdue.length}</div><div class="stat-label">needs attention</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Upcoming Hearings</h3>
+        ${upcomingHearings.length ? upcomingHearings.map(m=>`
+          <div class="list-row">
+            <div><div class="primary">${m.title}</div><div class="meta mono">${m.matterNumber} · ${m.court||'—'}</div></div>
+            <div class="stamp-sm c-urgent">${fmtDate(m.nextHearing)}</div>
+          </div>`).join('') : '<div class="empty">No upcoming hearings on record.</div>'}
+      </div>
+      <div class="card">
+        <h3>Team Activity</h3>
+        ${state.activity.length ? state.activity.slice(0,8).map(a=>`
+          <div class="timeline-item"><div class="timeline-dot"></div>
+            <div><div class="txt"><b>${a.actor}</b> ${a.text}</div><div class="when">${new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div>
+          </div>`).join('') : '<div class="empty">No activity yet — create a matter or task to get started.</div>'}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Your Tasks Due Today / Overdue</h3>
+      ${[...overdue, ...dueToday].length ? [...overdue, ...dueToday].map(t=>`
+        <div class="list-row">
+          <div><div class="primary">${t.title}</div><div class="meta">${t.matterId ? (state.matters.find(m=>m.id===t.matterId)?.title||'') : 'General'} · Due ${fmtDate(t.due)}</div></div>
+          <span class="stamp-sm ${t.due<today?'c-urgent':'c-pending'}">${t.due<today?'Overdue':'Due Today'}</span>
+        </div>`).join('') : '<div class="empty">Nothing urgent — nicely clear.</div>'}
+    </div>
+  `;
+}
+
+// ---- Matters ----
+window.__matterFilter = 'all';
+function pageMatters(){
+  const f = window.__matterFilter;
+  let list = state.matters;
+  if(f!=='all') list = list.filter(m=>m.status===f);
+  const q = (window.__matterSearch||'').toLowerCase();
+  if(q) list = list.filter(m=> (m.title+m.matterNumber+m.client+m.court).toLowerCase().includes(q));
+
+  return `
+    <div class="page-head">
+      <div><h2>Matters</h2><div class="sub">${state.matters.length} on file</div></div>
+      <button class="btn-primary" id="new-matter-btn">+ New Matter</button>
+    </div>
+    <div class="search-bar"><input id="matter-search" placeholder="Search matters, clients, courts..." value="${window.__matterSearch||''}"></div>
+    <div class="filters">
+      ${['all','active','pending','archived'].map(s=>`<button class="filter-chip ${f===s?'active':''}" data-f="${s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join('')}
+    </div>
+    <div id="matters-list">
+      ${list.length ? list.map(m=>matterCardHtml(m)).join('') : '<div class="empty">No matters match. Create one to get started.</div>'}
+    </div>
+  `;
+}
+function matterCardHtml(m){
+  const statusClass = m.status==='active'?'c-active':m.status==='pending'?'c-pending':'c-archived';
+  return `
+    <div class="matter-card" data-mid="${m.id}">
+      <div style="flex:1;min-width:0;">
+        <div class="num mono">${m.matterNumber}</div>
+        <h4>${m.title}</h4>
+        <div class="meta">${m.client||'—'} vs ${m.opposingParty||'—'} · ${m.court||'—'} · Next hearing: ${fmtDate(m.nextHearing)}</div>
+      </div>
+      <div class="tags">
+        <span class="stamp-sm ${statusClass}">${m.status}</span>
+        ${m.priority==='high' ? '<span class="stamp-sm c-urgent">High</span>' : ''}
+      </div>
+    </div>`;
+}
+function pageMatterDetail(mid){
+  const m = state.matters.find(x=>x.id===mid);
+  if(!m) return '<div class="empty">Matter not found.</div>';
+  const linkedTasks = state.tasks.filter(t=>t.matterId===mid);
+  return `
+    <a class="detail-back" href="#" id="back-to-matters">← Back to Matters</a>
+    <div class="page-head">
+      <div>
+        <div class="num mono" style="color:var(--slate);">${m.matterNumber}</div>
+        <h2>${m.title}</h2>
+        <div class="sub">${m.client||'—'} vs ${m.opposingParty||'—'}</div>
+      </div>
+      <div class="tags"><span class="stamp-sm ${m.status==='active'?'c-active':m.status==='pending'?'c-pending':'c-archived'}">${m.status}</span></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Matter Details</h3>
+        <div class="list-row"><div class="meta">Court / Jurisdiction</div><div>${m.court||'—'}</div></div>
+        <div class="list-row"><div class="meta">Case Type</div><div>${m.caseType||'—'}</div></div>
+        <div class="list-row"><div class="meta">Priority</div><div>${m.priority||'normal'}</div></div>
+        <div class="list-row"><div class="meta">Filing Date</div><div>${fmtDate(m.filingDate)}</div></div>
+        <div class="list-row"><div class="meta">Next Hearing</div><div>${fmtDate(m.nextHearing)}</div></div>
+        <div class="list-row"><div class="meta">Notes</div><div style="max-width:60%;text-align:right;">${m.notes||'—'}</div></div>
+      </div>
+      <div class="card">
+        <h3>Linked Tasks</h3>
+        ${linkedTasks.length ? linkedTasks.map(t=>`<div class="list-row"><div class="primary" style="font-size:12.5px;">${t.title}</div><span class="stamp-sm ${t.status==='completed'?'c-completed':t.status==='in_progress'?'c-inprogress':'c-todo'}">${t.status.replace('_',' ')}</span></div>`).join('') : '<div class="empty">No tasks linked yet.</div>'}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Matter Timeline</h3>
+      ${(m.timeline||[]).length ? m.timeline.slice().reverse().map(t=>`
+        <div class="timeline-item"><div class="timeline-dot"></div>
+          <div><div class="txt">${t.text}</div><div class="when">${new Date(t.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} — ${t.actor}</div></div>
+        </div>`).join('') : '<div class="empty">No timeline entries yet.</div>'}
+    </div>
+  `;
+}
+
+// ---- Tasks ----
+window.__taskFilter = 'all';
+function pageTasks(){
+  const f = window.__taskFilter;
+  let list = state.tasks;
+  if(f==='mine') list = list.filter(t=>t.assignee===currentUser.id);
+  else if(f!=='all') list = list.filter(t=>t.status===f);
+  list = list.slice().sort((a,b)=> (a.due||'9999').localeCompare(b.due||'9999'));
+
+  return `
+    <div class="page-head">
+      <div><h2>Tasks</h2><div class="sub">${state.tasks.length} total</div></div>
+      <button class="btn-primary" id="new-task-btn">+ New Task</button>
+    </div>
+    <div class="filters">
+      ${[['all','All'],['mine','My Tasks'],['to_do','To Do'],['in_progress','In Progress'],['completed','Completed']].map(([k,l])=>`<button class="filter-chip ${f===k?'active':''}" data-tf="${k}">${l}</button>`).join('')}
+    </div>
+    <div class="card">
+      ${list.length ? list.map(t=>taskRowHtml(t)).join('') : '<div class="empty">No tasks match this filter.</div>'}
+    </div>
+  `;
+}
+function taskRowHtml(t){
+  const assignee = USERS.find(u=>u.id===t.assignee);
+  const matter = t.matterId ? state.matters.find(m=>m.id===t.matterId) : null;
+  const overdue = t.due && t.due<todayStr() && t.status!=='completed';
+  return `
+    <div class="task-row ${t.status==='completed'?'done':''}" data-tid="${t.id}">
+      <div class="task-check ${t.status==='completed'?'done':''}" data-toggle="${t.id}">${t.status==='completed'?'✓':''}</div>
+      <div style="flex:1;">
+        <div class="t-title">${t.title}</div>
+        <div class="t-meta">${matter?matter.title+' · ':''}${assignee?assignee.name:'Unassigned'} · Due ${fmtDate(t.due)} ${overdue?'· <span style=\"color:var(--crimson);\">Overdue</span>':''}</div>
+      </div>
+      <span class="stamp-sm ${t.priority==='high'?'c-urgent':t.priority==='low'?'c-todo':'c-pending'}">${t.priority}</span>
+    </div>`;
+}
+
+// ---- Modals ----
+function openModal(html){
+  document.getElementById('modal-content').innerHTML = `<button class="close-x" id="modal-close">×</button>` + html;
+  document.getElementById('modal-bg').style.display='flex';
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+}
+function closeModal(){ document.getElementById('modal-bg').style.display='none'; }
+document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-bg') closeModal(); });
+
+function newMatterModal(){
+  openModal(`
+    <h3>New Matter</h3>
+    <div class="field-row">
+      <div class="field"><label>Matter Title</label><input id="f-title" placeholder="e.g. Sharma vs Sharma"></div>
+      <div class="field"><label>Matter Number</label><input id="f-num" placeholder="e.g. CIV/2026/0142"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Client</label><input id="f-client"></div>
+      <div class="field"><label>Opposing Party</label><input id="f-opp"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Court / Jurisdiction</label><input id="f-court" placeholder="e.g. District Court, Pune"></div>
+      <div class="field"><label>Case Type</label><input id="f-type" placeholder="e.g. Civil, Criminal, Property"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Status</label><select id="f-status"><option value="active">Active</option><option value="pending">Pending</option><option value="archived">Archived</option></select></div>
+      <div class="field"><label>Priority</label><select id="f-priority"><option value="normal">Normal</option><option value="high">High</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Filing Date</label><input type="date" id="f-filing"></div>
+      <div class="field"><label>Next Hearing</label><input type="date" id="f-hearing"></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="f-notes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-matter">Cancel</button>
+      <button class="btn-primary" id="save-matter">Create Matter</button>
+    </div>
+  `);
+  document.getElementById('cancel-matter').addEventListener('click', closeModal);
+  document.getElementById('save-matter').addEventListener('click', async ()=>{
+    const title = document.getElementById('f-title').value.trim();
+    if(!title){ alert('Matter title is required.'); return; }
+    const m = {
+      id: uid(),
+      title,
+      matterNumber: document.getElementById('f-num').value.trim() || 'MAT/'+new Date().getFullYear()+'/'+Math.floor(Math.random()*9000+1000),
+      client: document.getElementById('f-client').value.trim(),
+      opposingParty: document.getElementById('f-opp').value.trim(),
+      court: document.getElementById('f-court').value.trim(),
+      caseType: document.getElementById('f-type').value.trim(),
+      status: document.getElementById('f-status').value,
+      priority: document.getElementById('f-priority').value,
+      filingDate: document.getElementById('f-filing').value,
+      nextHearing: document.getElementById('f-hearing').value,
+      notes: document.getElementById('f-notes').value.trim(),
+      timeline: [{text:'Matter created.', actor: currentUser.name, ts: new Date().toISOString()}]
+    };
+    state.matters.unshift(m);
+    logActivity(`created matter "${m.title}"`);
+    await saveStore();
+    closeModal();
+    renderPage();
+  });
+}
+
+function newTaskModal(){
+  openModal(`
+    <h3>New Task</h3>
+    <div class="field"><label>Task Title</label><input id="t-title"></div>
+    <div class="field-row">
+      <div class="field"><label>Assign To</label><select id="t-assignee">${USERS.map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Linked Matter (optional)</label><select id="t-matter"><option value="">None</option>${state.matters.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Due Date</label><input type="date" id="t-due"></div>
+      <div class="field"><label>Priority</label><select id="t-priority"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-task">Cancel</button>
+      <button class="btn-primary" id="save-task">Create Task</button>
+    </div>
+  `);
+  document.getElementById('cancel-task').addEventListener('click', closeModal);
+  document.getElementById('save-task').addEventListener('click', async ()=>{
+    const title = document.getElementById('t-title').value.trim();
+    if(!title){ alert('Task title is required.'); return; }
+    const t = {
+      id: uid(), title,
+      assignee: document.getElementById('t-assignee').value,
+      matterId: document.getElementById('t-matter').value || null,
+      due: document.getElementById('t-due').value,
+      priority: document.getElementById('t-priority').value,
+      status: 'to_do'
+    };
+    state.tasks.unshift(t);
+    logActivity(`created task "${t.title}"`);
+    await saveStore();
+    closeModal();
+    renderPage();
+  });
+}
+
+// ---- Event delegation for dynamic content ----
+function attachPageHandlers(){
+  const nb = document.getElementById('new-matter-btn'); if(nb) nb.addEventListener('click', newMatterModal);
+  const nt = document.getElementById('new-task-btn'); if(nt) nt.addEventListener('click', newTaskModal);
+
+  document.querySelectorAll('[data-f]').forEach(b=> b.addEventListener('click', ()=>{ window.__matterFilter=b.dataset.f; renderPage(); }));
+  document.querySelectorAll('[data-tf]').forEach(b=> b.addEventListener('click', ()=>{ window.__taskFilter=b.dataset.tf; renderPage(); }));
+
+  const ms = document.getElementById('matter-search');
+  if(ms) ms.addEventListener('input', (e)=>{ window.__matterSearch = e.target.value; renderPage(); document.getElementById('matter-search').focus(); document.getElementById('matter-search').setSelectionRange(999,999); });
+
+  document.querySelectorAll('.matter-card').forEach(c=> c.addEventListener('click', ()=>{ window.__activeMatterId = c.dataset.mid; currentPage='matter-detail'; renderPage(); }));
+  const back = document.getElementById('back-to-matters'); if(back) back.addEventListener('click', (e)=>{ e.preventDefault(); currentPage='matters'; document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active')); document.querySelector('[data-page="matters"]').classList.add('active'); renderPage(); });
+
+  document.querySelectorAll('[data-toggle]').forEach(el=> el.addEventListener('click', async ()=>{
+    const t = state.tasks.find(x=>x.id===el.dataset.toggle);
+    t.status = t.status==='completed' ? 'to_do' : 'completed';
+    logActivity(`marked "${t.title}" ${t.status==='completed'?'complete':'incomplete'}`);
+    await saveStore();
+    renderPage();
+  }));
+
+  const ndb = document.getElementById('new-doc-btn'); if(ndb) ndb.addEventListener('click', newDocumentModal);
+  const da = document.getElementById('docs-active'); if(da) da.addEventListener('click', ()=>{ window.__showDeletedDocs=false; renderPage(); });
+  const dd = document.getElementById('docs-deleted'); if(dd) dd.addEventListener('click', ()=>{ window.__showDeletedDocs=true; renderPage(); });
+  document.querySelectorAll('[data-delete-doc]').forEach(b=> b.addEventListener('click', async ()=>{
+    const d = state.documents.find(x=>x.id===b.dataset.deleteDoc); d.deleted=true;
+    logActivity(`moved document "${d.title}" to recycle bin`); await saveStore(); renderPage();
+  }));
+  document.querySelectorAll('[data-restore]').forEach(b=> b.addEventListener('click', async ()=>{
+    const d = state.documents.find(x=>x.id===b.dataset.restore); d.deleted=false;
+    logActivity(`restored document "${d.title}"`); await saveStore(); renderPage();
+  }));
+
+  const ntb = document.getElementById('new-target-btn'); if(ntb) ntb.addEventListener('click', newTargetModal);
+
+  const gs = document.getElementById('global-search');
+  if(gs) gs.addEventListener('input', (e)=>{ window.__globalSearch = e.target.value; renderPage(); const el=document.getElementById('global-search'); el.focus(); el.setSelectionRange(999,999); });
+
+  const mar = document.getElementById('mark-all-read');
+  if(mar) mar.addEventListener('click', async ()=>{
+    state.notifsRead = getNotifications().map(n=>n.id);
+    await saveStore(); renderPage();
+  });
+
+  const nmb = document.getElementById('new-member-btn'); if(nmb) nmb.addEventListener('click', newMemberModal);
+  document.querySelectorAll('[data-remove-member]').forEach(b=> b.addEventListener('click', async ()=>{
+    const target = USERS.find(u=>u.id===b.dataset.removeMember);
+    if(!confirm(`Remove ${target.name} from the team?`)) return;
+    USERS = USERS.filter(u=>u.id!==target.id);
+    state.team = USERS;
+    logActivity(`removed "${target.name}" from the team`);
+    await saveStore(); renderPage();
+  }));
+
+  const nrb = document.getElementById('new-research-btn'); if(nrb) nrb.addEventListener('click', newResearchModal);
+  const rq = document.getElementById('research-query');
+  if(rq) rq.addEventListener('input', (e)=>{ window.__researchQuery = e.target.value; renderPage(); const el=document.getElementById('research-query'); el.focus(); el.setSelectionRange(999,999); });
+
+  const nnb = document.getElementById('new-notice-btn'); if(nnb) nnb.addEventListener('click', newNoticeModal);
+
+  const njb = document.getElementById('new-judgment-btn'); if(njb) njb.addEventListener('click', newJudgmentModal);
+  document.querySelectorAll('[data-view-judgment]').forEach(b=> b.addEventListener('click', ()=> viewJudgmentPdf(b.dataset.viewJudgment)));
+  document.querySelectorAll('[data-delete-judgment]').forEach(b=> b.addEventListener('click', async ()=>{
+    const j = state.judgments.find(x=>x.id===b.dataset.deleteJudgment);
+    if(!confirm(`Delete "${j.title}"?`)) return;
+    state.judgments = state.judgments.filter(x=>x.id!==j.id);
+    if(j.hasFile){
+      try{ await window.storage.delete('judgment-file:'+j.id, true); }catch(e){ /* ignore if already gone */ }
+    }
+    logActivity(`deleted judgment "${j.title}"`);
+    await saveStore(); renderPage();
+  }));
+}
+
+// ---- Notifications (derived from live data) ----
+function getNotifications(){
+  const today = todayStr();
+  const list = [];
+  state.tasks.forEach(t=>{
+    if(t.status==='completed') return;
+    if(t.due && t.due < today) list.push({id:'ov-'+t.id, type:'Overdue', text:`"${t.title}" is overdue`, ts:t.due});
+    else if(t.due === today) list.push({id:'dt-'+t.id, type:'Due Today', text:`"${t.title}" is due today`, ts:t.due});
+    if(t.assignee===currentUser.id) list.push({id:'as-'+t.id, type:'Assigned', text:`You're assigned "${t.title}"`, ts:t.due||today});
+  });
+  state.matters.forEach(m=>{
+    if(m.nextHearing){
+      const days = (new Date(m.nextHearing) - new Date(today)) / 86400000;
+      if(days>=0 && days<=3) list.push({id:'hr-'+m.id, type:'Hearing', text:`Hearing for "${m.title}" on ${fmtDate(m.nextHearing)}`, ts:m.nextHearing});
+    }
+  });
+  state.documents.forEach(d=>{
+    if(d.expiry && !d.deleted){
+      const days = (new Date(d.expiry) - new Date(today)) / 86400000;
+      if(days>=0 && days<=7) list.push({id:'dc-'+d.id, type:'Document Expiry', text:`"${d.title}" expires ${fmtDate(d.expiry)}`, ts:d.expiry});
+    }
+  });
+  const seen = new Set();
+  return list.filter(n=> seen.has(n.id) ? false : (seen.add(n.id), true)).sort((a,b)=>(a.ts||'').localeCompare(b.ts||''));
+}
+function pageNotifications(){
+  const list = getNotifications();
+  return `
+    <div class="page-head"><div><h2>Notifications</h2><div class="sub">Hearing, deadline, task and document alerts</div></div>
+      <button class="btn-secondary" id="mark-all-read">Mark all read</button></div>
+    <div class="card">
+      ${list.length ? list.map(n=>`
+        <div class="list-row">
+          <div><span class="stamp-sm ${state.notifsRead.includes(n.id)?'c-todo':'c-urgent'}" style="margin-right:8px;">${n.type}</span>${n.text}</div>
+          <div class="meta">${fmtDate(n.ts)}</div>
+        </div>`).join('') : '<div class="empty">No notifications — all clear.</div>'}
+    </div>`;
+}
+
+// ---- Documents ----
+function pageDocuments(){
+  const showDeleted = window.__showDeletedDocs;
+  let list = state.documents.filter(d=> showDeleted ? d.deleted : !d.deleted);
+  return `
+    <div class="page-head">
+      <div><h2>Documents</h2><div class="sub">${state.documents.filter(d=>!d.deleted).length} on file</div></div>
+      <button class="btn-primary" id="new-doc-btn">+ Add Document</button>
+    </div>
+    <div class="filters">
+      <button class="filter-chip ${!showDeleted?'active':''}" id="docs-active">All Documents</button>
+      <button class="filter-chip ${showDeleted?'active':''}" id="docs-deleted">Recycle Bin</button>
+    </div>
+    <div class="card">
+      ${list.length ? list.map(d=>{
+        const m = d.matterId ? state.matters.find(x=>x.id===d.matterId) : null;
+        return `<div class="list-row">
+          <div><div class="primary">${d.title}</div><div class="meta">${d.category||'Uncategorized'} ${m?'· '+m.title:''} · v${d.version||1} · uploaded by ${d.uploadedBy} on ${fmtDate(d.uploadedAt)} ${d.expiry?'· expires '+fmtDate(d.expiry):''}</div></div>
+          ${d.deleted ? `<button class="btn-secondary" data-restore="${d.id}">Restore</button>` : `<button class="btn-secondary" data-delete-doc="${d.id}">Delete</button>`}
+        </div>`;
+      }).join('') : `<div class="empty">${showDeleted?'Recycle bin is empty.':'No documents yet.'}</div>`}
+    </div>`;
+}
+function newDocumentModal(){
+  openModal(`
+    <h3>Add Document</h3>
+    <div class="field"><label>Document Title</label><input id="d-title" placeholder="e.g. Vakalatnama - Sharma"></div>
+    <div class="field-row">
+      <div class="field"><label>Category</label><input id="d-cat" placeholder="e.g. Pleading, Evidence, Correspondence"></div>
+      <div class="field"><label>Linked Matter</label><select id="d-matter"><option value="">None</option>${state.matters.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>Expiry / Renewal Date (optional)</label><input type="date" id="d-expiry"></div>
+    <div class="field"><label>Notes / Content Summary</label><textarea id="d-notes" placeholder="Brief description — full file upload comes with the production build"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-doc">Cancel</button>
+      <button class="btn-primary" id="save-doc">Add Document</button>
+    </div>`);
+  document.getElementById('cancel-doc').addEventListener('click', closeModal);
+  document.getElementById('save-doc').addEventListener('click', async ()=>{
+    const title = document.getElementById('d-title').value.trim();
+    if(!title){ alert('Title is required.'); return; }
+    const d = {
+      id: uid(), title, category: document.getElementById('d-cat').value.trim(),
+      matterId: document.getElementById('d-matter').value || null,
+      expiry: document.getElementById('d-expiry').value,
+      notes: document.getElementById('d-notes').value.trim(),
+      version: 1, uploadedBy: currentUser.name, uploadedAt: todayStr(), deleted:false
+    };
+    state.documents.unshift(d);
+    logActivity(`added document "${d.title}"`);
+    await saveStore(); closeModal(); renderPage();
+  });
+}
+
+// ---- Team ----
+function pageTeam(){
+  const iAmAdmin = !!currentUser.isAdmin;
+  const adminCount = USERS.filter(u=>u.isAdmin).length;
+  return `
+    <div class="page-head">
+      <div><h2>Team</h2><div class="sub">${USERS.length} members · scales to 100${iAmAdmin?' · you can manage the team':''}</div></div>
+      ${iAmAdmin ? '<button class="btn-primary" id="new-member-btn">+ Add Team Member</button>' : ''}
+    </div>
+    <div class="grid grid-3">
+      ${USERS.map(u=>{
+        const myTasks = state.tasks.filter(t=>t.assignee===u.id && t.status!=='completed');
+        const canRemove = iAmAdmin && u.id!==currentUser.id && !(u.isAdmin && adminCount<=1);
+        return `<div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div class="avatar" style="width:38px;height:38px;">${initials(u.name)}</div>
+            <div><div style="font-weight:600;">${u.name}${u.id===currentUser.id?' (you)':''}${u.isAdmin?' 🔑':''}</div></div>
+          </div>
+          <div class="list-row"><div class="meta">Open Tasks</div><div>${myTasks.length}</div></div>
+          <div class="list-row"><div class="meta">Overdue</div><div style="color:${myTasks.filter(t=>t.due&&t.due<todayStr()).length?'var(--crimson)':'inherit'}">${myTasks.filter(t=>t.due&&t.due<todayStr()).length}</div></div>
+          ${canRemove ? `<button class="btn-secondary" style="width:100%;margin-top:10px;" data-remove-member="${u.id}">Remove from Team</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    ${!iAmAdmin ? '<div class="empty" style="margin-top:14px;">Only an admin (or the boss) can add or remove team members.</div>' : ''}
+    `;
+}
+function newMemberModal(){
+  openModal(`
+    <h3>Add Team Member</h3>
+    <div class="field"><label>Full Name</label><input id="m-name" placeholder="e.g. Adv. Full Name"></div>
+    <div class="field"><label><input type="checkbox" id="m-admin" style="width:auto;margin-right:6px;">Grant admin permissions</label></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-member">Cancel</button>
+      <button class="btn-primary" id="save-member">Add to Team</button>
+    </div>`);
+  document.getElementById('cancel-member').addEventListener('click', closeModal);
+  document.getElementById('save-member').addEventListener('click', async ()=>{
+    const name = document.getElementById('m-name').value.trim();
+    if(!name){ alert('Name is required.'); return; }
+    const newUser = { id: uid(), name, isAdmin: document.getElementById('m-admin').checked };
+    USERS.push(newUser);
+    state.team = USERS;
+    logActivity(`added "${newUser.name}" to the team`);
+    await saveStore(); closeModal(); renderPage();
+  });
+}
+
+// ---- Targets ----
+function pageTargets(){
+  const monthPrefix = todayStr().slice(0,7);
+  return `
+    <div class="page-head">
+      <div><h2>Weekly / Monthly Targets</h2><div class="sub">Individual and team progress tracking</div></div>
+      <button class="btn-primary" id="new-target-btn">+ Set Target</button>
+    </div>
+    <div class="card">
+      ${state.targets.length ? state.targets.map(tg=>{
+        const owner = tg.userId ? USERS.find(u=>u.id===tg.userId) : null;
+        const achieved = state.tasks.filter(t=> t.status==='completed' && (tg.userId? t.assignee===tg.userId : true) && (t.due||'').startsWith(tg.period==='monthly'?monthPrefix:'')).length;
+        const pct = Math.min(100, Math.round((achieved/Math.max(tg.value,1))*100));
+        return `<div class="list-row">
+          <div><div class="primary">${owner?owner.name:'Team-wide'} — ${tg.metric}</div><div class="meta">${tg.period} target: ${tg.value}</div></div>
+          <div style="width:140px;">
+            <div style="background:var(--border-soft);border-radius:10px;height:8px;overflow:hidden;"><div style="background:var(--brass);height:100%;width:${pct}%;"></div></div>
+            <div class="meta" style="text-align:right;margin-top:3px;">${achieved}/${tg.value}</div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">No targets set yet.</div>'}
+    </div>`;
+}
+function newTargetModal(){
+  openModal(`
+    <h3>Set Target</h3>
+    <div class="field-row">
+      <div class="field"><label>Owner</label><select id="tg-owner"><option value="">Team-wide</option>${USERS.map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Period</label><select id="tg-period"><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Metric</label><input id="tg-metric" placeholder="e.g. Tasks completed"></div>
+      <div class="field"><label>Target Value</label><input type="number" id="tg-value" value="10"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-target">Cancel</button>
+      <button class="btn-primary" id="save-target">Set Target</button>
+    </div>`);
+  document.getElementById('cancel-target').addEventListener('click', closeModal);
+  document.getElementById('save-target').addEventListener('click', async ()=>{
+    const tg = { id: uid(), userId: document.getElementById('tg-owner').value || null, period: document.getElementById('tg-period').value,
+      metric: document.getElementById('tg-metric').value.trim() || 'Tasks completed', value: parseInt(document.getElementById('tg-value').value)||10 };
+    state.targets.unshift(tg);
+    logActivity(`set a ${tg.period} target`);
+    await saveStore(); closeModal(); renderPage();
+  });
+}
+
+// ---- Global Search ----
+function pageSearch(){
+  const q = (window.__globalSearch||'').toLowerCase();
+  let mRes=[], tRes=[], dRes=[];
+  if(q.length>1){
+    mRes = state.matters.filter(m=>(m.title+m.matterNumber+m.client+m.notes).toLowerCase().includes(q));
+    tRes = state.tasks.filter(t=>t.title.toLowerCase().includes(q));
+    dRes = state.documents.filter(d=>!d.deleted && (d.title+d.notes).toLowerCase().includes(q));
+  }
+  return `
+    <div class="page-head"><div><h2>Global Search</h2><div class="sub">Matters, tasks, documents and notes</div></div></div>
+    <div class="search-bar"><input id="global-search" placeholder="Search everything..." value="${window.__globalSearch||''}"></div>
+    ${q.length>1 ? `
+      <div class="card" style="margin-bottom:14px;"><h3>Matters (${mRes.length})</h3>${mRes.length?mRes.map(m=>`<div class="list-row"><div class="primary">${m.title}</div><div class="meta mono">${m.matterNumber}</div></div>`).join(''):'<div class="empty">No matches.</div>'}</div>
+      <div class="card" style="margin-bottom:14px;"><h3>Tasks (${tRes.length})</h3>${tRes.length?tRes.map(t=>`<div class="list-row"><div class="primary">${t.title}</div><div class="meta">Due ${fmtDate(t.due)}</div></div>`).join(''):'<div class="empty">No matches.</div>'}</div>
+      <div class="card"><h3>Documents (${dRes.length})</h3>${dRes.length?dRes.map(d=>`<div class="list-row"><div class="primary">${d.title}</div><div class="meta">${d.category||''}</div></div>`).join(''):'<div class="empty">No matches.</div>'}</div>
+    ` : '<div class="empty">Type at least 2 characters to search.</div>'}
+  `;
+}
+
+// ---- Installability + Real Notifications ----
+let deferredInstallPrompt = null;
+let swRegistration = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => { swRegistration = reg; })
+      .catch(e => console.log('Service worker registration failed (this file may be served in a context that blocks it):', e));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'inline-block';
+});
+
+function setupNotifButtons(){
+  const enableBtn = document.getElementById('enable-notifs-btn');
+  const installBtn = document.getElementById('install-btn');
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    enableBtn.style.display = 'inline-block';
+  }
+  enableBtn.addEventListener('click', async () => {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      enableBtn.style.display = 'none';
+      fireNotification('JurisFlow', 'Alerts are on — you\'ll be notified of hearings, deadlines and overdue tasks.', 'welcome');
+    }
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) { alert('Use your browser\'s "Install App" or "Add to Home Screen" option from the address bar / menu.'); return; }
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.style.display = 'none';
+  });
+}
+
+function fireNotification(title, body, tag){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (swRegistration) {
+    swRegistration.active && swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
+  } else {
+    new Notification(title, { body, icon: './icons/icon-192.png', tag });
+  }
+}
+
+// Track which alerts have already fired this session so we don't repeat them every poll.
+let notifiedIds = new Set();
+function checkAndFireNotifications(){
+  if (!currentUser || !('Notification' in window) || Notification.permission !== 'granted') return;
+  getNotifications().forEach(n => {
+    if (notifiedIds.has(n.id)) return;
+    notifiedIds.add(n.id);
+    fireNotification(`JurisFlow — ${n.type}`, n.text, n.id);
+  });
+}
+setInterval(checkAndFireNotifications, 60000);
+
+// ---- Research (LexisNexis-style shell — links out to free sources; full case-law DB needs a licensed API) ----
+const RESEARCH_SOURCES = [
+  {name:'Indian Kanoon', url:'https://indiankanoon.org/search/?formInput='},
+  {name:'e-Courts Services', url:'https://services.ecourts.gov.in/ecourtindia_v6/'},
+  {name:'SCC Online', url:'https://www.scconline.com/'},
+];
+function pageResearch(){
+  const q = window.__researchQuery || '';
+  return `
+    <div class="page-head">
+      <div><h2>Legal Research</h2><div class="sub">Firm research notes + quick links · connect a licensed database (LexisNexis/Manupatra/SCC) later for in-app case law search</div></div>
+      <button class="btn-primary" id="new-research-btn">+ Save Research Note</button>
+    </div>
+    <div class="search-bar"><input id="research-query" placeholder="Search a case, statute or citation on connected sources..." value="${q}"></div>
+    ${q.length>1 ? `<div class="card" style="margin-bottom:16px;"><h3>Search On</h3>${RESEARCH_SOURCES.map(s=>`<div class="list-row"><div class="primary">${s.name}</div><a class="btn-secondary" target="_blank" href="${s.url}${encodeURIComponent(q)}">Open ↗</a></div>`).join('')}</div>` : ''}
+    <div class="card">
+      <h3>Saved Research Notes</h3>
+      ${state.research.length ? state.research.map(r=>{
+        const m = r.matterId ? state.matters.find(x=>x.id===r.matterId) : null;
+        return `<div class="list-row"><div><div class="primary">${r.title}</div><div class="meta">${m?m.title+' · ':''}${r.author} · ${fmtDate(r.date)}<br>${r.notes||''}</div></div></div>`;
+      }).join('') : '<div class="empty">No research notes saved yet.</div>'}
+    </div>`;
+}
+function newResearchModal(){
+  openModal(`
+    <h3>Save Research Note</h3>
+    <div class="field"><label>Title / Citation</label><input id="r-title" placeholder="e.g. K.S. Puttaswamy vs Union of India"></div>
+    <div class="field"><label>Linked Matter (optional)</label><select id="r-matter"><option value="">None</option>${state.matters.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select></div>
+    <div class="field"><label>Notes</label><textarea id="r-notes" placeholder="Key holding, relevance to matter, etc."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-research">Cancel</button>
+      <button class="btn-primary" id="save-research">Save Note</button>
+    </div>`);
+  document.getElementById('cancel-research').addEventListener('click', closeModal);
+  document.getElementById('save-research').addEventListener('click', async ()=>{
+    const title = document.getElementById('r-title').value.trim();
+    if(!title){ alert('Title is required.'); return; }
+    state.research.unshift({ id: uid(), title, matterId: document.getElementById('r-matter').value || null,
+      notes: document.getElementById('r-notes').value.trim(), author: currentUser.name, date: todayStr() });
+    logActivity(`saved a research note: "${title}"`);
+    await saveStore(); closeModal(); renderPage();
+  });
+}
+
+// ---- Notices (Provakil/VakeelPro-style bulk notice tracking) ----
+function pageNotices(){
+  return `
+    <div class="page-head">
+      <div><h2>Legal Notices</h2><div class="sub">Track dispatch and delivery of notices — digital or physical</div></div>
+      <button class="btn-primary" id="new-notice-btn">+ Log Notice</button>
+    </div>
+    <div class="card">
+      ${state.notices.length ? state.notices.map(n=>{
+        const m = n.matterId ? state.matters.find(x=>x.id===n.matterId) : null;
+        return `<div class="list-row">
+          <div><div class="primary">${n.recipient}</div><div class="meta">${m?m.title+' · ':''}${n.mode} · sent ${fmtDate(n.sentDate)}</div></div>
+          <span class="stamp-sm ${n.status==='delivered'?'c-completed':n.status==='returned'?'c-urgent':'c-pending'}">${n.status}</span>
+        </div>`;
+      }).join('') : '<div class="empty">No notices logged yet.</div>'}
+    </div>`;
+}
+function newNoticeModal(){
+  openModal(`
+    <h3>Log Legal Notice</h3>
+    <div class="field"><label>Recipient</label><input id="n-recipient"></div>
+    <div class="field-row">
+      <div class="field"><label>Linked Matter</label><select id="n-matter"><option value="">None</option>${state.matters.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select></div>
+      <div class="field"><label>Mode</label><select id="n-mode"><option value="Digital">Digital</option><option value="Physical (India Post)">Physical (India Post)</option><option value="Both">Both</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Sent Date</label><input type="date" id="n-date" value="${todayStr()}"></div>
+      <div class="field"><label>Status</label><select id="n-status"><option value="sent">Sent</option><option value="delivered">Delivered</option><option value="returned">Returned</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-notice">Cancel</button>
+      <button class="btn-primary" id="save-notice">Log Notice</button>
+    </div>`);
+  document.getElementById('cancel-notice').addEventListener('click', closeModal);
+  document.getElementById('save-notice').addEventListener('click', async ()=>{
+    const recipient = document.getElementById('n-recipient').value.trim();
+    if(!recipient){ alert('Recipient is required.'); return; }
+    state.notices.unshift({ id: uid(), recipient, matterId: document.getElementById('n-matter').value || null,
+      mode: document.getElementById('n-mode').value, sentDate: document.getElementById('n-date').value, status: document.getElementById('n-status').value });
+    logActivity(`logged a notice to "${recipient}"`);
+    await saveStore(); closeModal(); renderPage();
+  });
+}
+
+// ---- Saved Judgments (note + PDF upload, per judgment) ----
+function pageJudgments(){
+  return `
+    <div class="page-head">
+      <div><h2>Saved Judgments</h2><div class="sub">${state.judgments.length} on file · notes + PDF, kept for firm reference</div></div>
+      <button class="btn-primary" id="new-judgment-btn">+ Save Judgment</button>
+    </div>
+    <div class="card">
+      ${state.judgments.length ? state.judgments.map(j=>{
+        const m = j.matterId ? state.matters.find(x=>x.id===j.matterId) : null;
+        return `<div class="list-row">
+          <div style="max-width:70%;">
+            <div class="primary">${j.title}</div>
+            <div class="meta">${j.court||'—'} ${j.citation?'· '+j.citation:''} ${m?'· '+m.title:''} · saved by ${j.uploadedBy} on ${fmtDate(j.uploadedAt)}</div>
+            ${j.notes ? `<div class="meta" style="margin-top:4px;">${j.notes}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            ${j.hasFile ? `<button class="btn-secondary" data-view-judgment="${j.id}">View PDF</button>` : '<span class="meta">No PDF attached</span>'}
+            <button class="btn-secondary" data-delete-judgment="${j.id}">Delete</button>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">No judgments saved yet.</div>'}
+    </div>`;
+}
+function newJudgmentModal(){
+  openModal(`
+    <h3>Save Judgment</h3>
+    <div class="field"><label>Case Title</label><input id="j-title" placeholder="e.g. K.S. Puttaswamy vs Union of India"></div>
+    <div class="field-row">
+      <div class="field"><label>Court</label><input id="j-court" placeholder="e.g. Supreme Court of India"></div>
+      <div class="field"><label>Citation</label><input id="j-citation" placeholder="e.g. (2017) 10 SCC 1"></div>
+    </div>
+    <div class="field"><label>Linked Matter (optional)</label><select id="j-matter"><option value="">None</option>${state.matters.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select></div>
+    <div class="field"><label>Notes</label><textarea id="j-notes" placeholder="Key holding, why it's relevant..."></textarea></div>
+    <div class="field"><label>Judgment PDF (optional, up to ~3.5MB)</label><input type="file" id="j-file" accept="application/pdf"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-judgment">Cancel</button>
+      <button class="btn-primary" id="save-judgment">Save Judgment</button>
+    </div>`);
+  document.getElementById('cancel-judgment').addEventListener('click', closeModal);
+  document.getElementById('save-judgment').addEventListener('click', async ()=>{
+    const title = document.getElementById('j-title').value.trim();
+    if(!title){ alert('Case title is required.'); return; }
+    const fileInput = document.getElementById('j-file');
+    const file = fileInput.files[0];
+    const saveBtn = document.getElementById('save-judgment');
+
+    const meta = {
+      id: uid(), title,
+      court: document.getElementById('j-court').value.trim(),
+      citation: document.getElementById('j-citation').value.trim(),
+      matterId: document.getElementById('j-matter').value || null,
+      notes: document.getElementById('j-notes').value.trim(),
+      uploadedBy: currentUser.name, uploadedAt: todayStr(),
+      hasFile: false, fileName: null
+    };
+
+    if(file){
+      if(file.type !== 'application/pdf'){ alert('Please choose a PDF file.'); return; }
+      if(file.size > 3.5 * 1024 * 1024){ alert('That PDF is too large for this prototype\'s storage (~3.5MB limit). The production build will support full-size files in real object storage.'); return; }
+      saveBtn.textContent = 'Uploading...'; saveBtn.disabled = true;
+      try{
+        const base64 = await new Promise((res, rej)=>{
+          const reader = new FileReader();
+          reader.onload = ()=> res(reader.result.split(',')[1]);
+          reader.onerror = ()=> rej(new Error('File read failed'));
+          reader.readAsDataURL(file);
+        });
+        await window.storage.set('judgment-file:'+meta.id, base64, true);
+        meta.hasFile = true;
+        meta.fileName = file.name;
+      }catch(e){
+        alert('Could not upload the PDF — saving the note without it.');
+      }
+    }
+
+    state.judgments.unshift(meta);
+    logActivity(`saved judgment "${meta.title}"${meta.hasFile ? ' with PDF' : ''}`);
+    await saveStore();
+    closeModal();
+    renderPage();
+  });
+}
+async function viewJudgmentPdf(id){
+  try{
+    const res = await window.storage.get('judgment-file:'+id, true);
+    if(!res || !res.value){ alert('PDF not found — it may not have uploaded successfully.'); return; }
+    const byteChars = atob(res.value);
+    const byteNumbers = new Array(byteChars.length);
+    for(let i=0;i<byteChars.length;i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([new Uint8Array(byteNumbers)], {type:'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }catch(e){
+    alert('Could not open the PDF.');
+  }
+}
+
+// ---- Init ----
+(async function init(){
+  await loadStore();
+  renderLogin();
+  setupNotifButtons();
+})();
+</script>
+</body>
+</html>
