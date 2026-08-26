@@ -6,7 +6,7 @@
 <title>JurisFlow</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#14202E">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JurisFlow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -142,7 +142,7 @@
   </div>
   <div class="login-card">
     <h3>Sign in</h3>
-    <p>Prototype workspace — select your profile to continue.</p>
+    <p>Select your profile to continue.</p>
     <div id="user-list"></div>
   </div>
 </div>
@@ -924,7 +924,7 @@ function fireNotification(title, body, tag){
   if (swRegistration) {
     swRegistration.active && swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
   } else {
-    new Notification(title, { body, icon: './icons/icon-192.png', tag });
+    new Notification(title, { body, icon: './icon-192.png', tag });
   }
 }
 
@@ -1087,7 +1087,7 @@ function newJudgmentModal(){
 
     if(file){
       if(file.type !== 'application/pdf'){ alert('Please choose a PDF file.'); return; }
-      if(file.size > 3.5 * 1024 * 1024){ alert('That PDF is too large for this prototype\'s storage (~3.5MB limit). The production build will support full-size files in real object storage.'); return; }
+      if(file.size > 3.5 * 1024 * 1024){ alert('That PDF is too large for this workspace\'s current storage (~3.5MB limit). A larger-capacity version is planned.'); return; }
       saveBtn.textContent = 'Uploading...'; saveBtn.disabled = true;
       try{
         const base64 = await new Promise((res, rej)=>{
