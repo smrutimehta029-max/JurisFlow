@@ -25,7 +25,8 @@
     --green:#3E6B4F;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+  html{background:var(--ink);overscroll-behavior-y:none;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;}
   h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
   button{font-family:inherit;cursor:pointer;}
@@ -50,7 +51,7 @@
 
   /* ---- App shell ---- */
   #app{display:none;min-height:100vh;}
-  .topbar{position:sticky;top:0;z-index:10;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;-webkit-transform:translateZ(0);transform:translateZ(0);will-change:transform;}
   .topbar .brand{display:flex;align-items:center;gap:10px;font-family:'Source Serif 4',serif;font-size:18px;letter-spacing:0.3px;}
   .topbar .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--brass);}
   .topbar nav{display:flex;gap:4px;}
