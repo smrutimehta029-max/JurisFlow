@@ -142,8 +142,11 @@
   </div>
   <div class="login-card">
     <h3>Sign in</h3>
-    <p>Select your profile to continue.</p>
-    <div id="user-list"></div>
+    <p>Enter your username and password to continue.</p>
+    <div class="field"><label>Username</label><input id="login-username" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="login-password" type="password" autocomplete="current-password"></div>
+    <div id="login-error" style="display:none;color:var(--crimson);font-size:12px;margin-bottom:10px;">Incorrect username or password.</div>
+    <button class="btn-primary" id="login-submit" style="width:100%;">Sign In</button>
   </div>
 </div>
 
@@ -182,10 +185,10 @@
 <script>
 let USERS = [];
 const DEFAULT_TEAM = [
-  {id:'chetan', name:'Adv. Chetan Nagare', isAdmin:true},
-  {id:'esheta', name:'Adv. Esheta Lunkad', isAdmin:false},
-  {id:'sagar',  name:'Adv. Sagar Kolhatkar', isAdmin:false},
-  {id:'smruti', name:'Smruti Mehta', isAdmin:false}
+  {id:'chetan', name:'Adv. Chetan Nagare', username:'chetan', password:'jf-chetan-2026', isAdmin:true},
+  {id:'esheta', name:'Adv. Esheta Lunkad', username:'esheta', password:'jf-esheta-2026', isAdmin:false},
+  {id:'sagar',  name:'Adv. Sagar Kolhatkar', username:'sagar', password:'jf-sagar-2026', isAdmin:false},
+  {id:'smruti', name:'Smruti Mehta', username:'smruti', password:'jf-smruti-2026', isAdmin:false}
 ];
 const STORE_KEY = 'jf-store';
 let state = { matters: [], tasks: [], activity: [], documents: [], targets: [], notifsRead: [], research: [], notices: [], judgments: [] };
@@ -269,26 +272,33 @@ function logActivity(text){
 }
 
 // ---- Login ----
-function renderLogin(){
-  const list = document.getElementById('user-list');
-  list.innerHTML = USERS.map(u => `
-    <button class="user-btn" data-uid="${u.id}">
-      <div class="avatar">${initials(u.name)}</div>
-      <div><div class="name">${u.name}</div>${u.role ? `<div class="role">${u.role}</div>` : ''}</div>
-    </button>`).join('');
-  list.querySelectorAll('.user-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      currentUser = USERS.find(u=>u.id===btn.dataset.uid);
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app').style.display='block';
-      document.getElementById('who-avatar').textContent = initials(currentUser.name);
-      document.getElementById('who-name').textContent = currentUser.name;
-      updateConnStatus();
-      checkAndFireNotifications();
-      renderPage();
-    });
-  });
+function attemptLogin(){
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  const match = USERS.find(u => (u.username||'').toLowerCase() === username && u.password === password);
+  const errEl = document.getElementById('login-error');
+  if(!match){
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  currentUser = match;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('who-avatar').textContent = initials(currentUser.name);
+  document.getElementById('who-name').textContent = currentUser.name;
+  updateConnStatus();
+  checkAndFireNotifications();
+  renderPage();
 }
+function renderLogin(){
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+document.getElementById('login-submit').addEventListener('click', attemptLogin);
+document.getElementById('login-password').addEventListener('keydown', (e)=>{ if(e.key==='Enter') attemptLogin(); });
+document.getElementById('login-username').addEventListener('keydown', (e)=>{ if(e.key==='Enter') document.getElementById('login-password').focus(); });
 document.getElementById('logout-btn').addEventListener('click', ()=>{
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -640,6 +650,7 @@ function attachPageHandlers(){
   });
 
   const nmb = document.getElementById('new-member-btn'); if(nmb) nmb.addEventListener('click', newMemberModal);
+  document.querySelectorAll('[data-change-pw]').forEach(b=> b.addEventListener('click', ()=> changePasswordModal(b.dataset.changePw)));
   document.querySelectorAll('[data-remove-member]').forEach(b=> b.addEventListener('click', async ()=>{
     const target = USERS.find(u=>u.id===b.dataset.removeMember);
     if(!confirm(`Remove ${target.name} from the team?`)) return;
@@ -782,7 +793,8 @@ function pageTeam(){
           </div>
           <div class="list-row"><div class="meta">Open Tasks</div><div>${myTasks.length}</div></div>
           <div class="list-row"><div class="meta">Overdue</div><div style="color:${myTasks.filter(t=>t.due&&t.due<todayStr()).length?'var(--crimson)':'inherit'}">${myTasks.filter(t=>t.due&&t.due<todayStr()).length}</div></div>
-          ${canRemove ? `<button class="btn-secondary" style="width:100%;margin-top:10px;" data-remove-member="${u.id}">Remove from Team</button>` : ''}
+          ${(u.id===currentUser.id || iAmAdmin) ? `<button class="btn-secondary" style="width:100%;margin-top:10px;" data-change-pw="${u.id}">${u.id===currentUser.id?'Change My Password':'Reset Password'}</button>` : ''}
+          ${canRemove ? `<button class="btn-secondary" style="width:100%;margin-top:8px;" data-remove-member="${u.id}">Remove from Team</button>` : ''}
         </div>`;
       }).join('')}
     </div>
@@ -793,6 +805,10 @@ function newMemberModal(){
   openModal(`
     <h3>Add Team Member</h3>
     <div class="field"><label>Full Name</label><input id="m-name" placeholder="e.g. Adv. Full Name"></div>
+    <div class="field-row">
+      <div class="field"><label>Username</label><input id="m-username" placeholder="login username"></div>
+      <div class="field"><label>Temporary Password</label><input id="m-password" placeholder="they should change this after first login"></div>
+    </div>
     <div class="field"><label><input type="checkbox" id="m-admin" style="width:auto;margin-right:6px;">Grant admin permissions</label></div>
     <div class="modal-actions">
       <button class="btn-secondary" id="cancel-member">Cancel</button>
@@ -801,12 +817,41 @@ function newMemberModal(){
   document.getElementById('cancel-member').addEventListener('click', closeModal);
   document.getElementById('save-member').addEventListener('click', async ()=>{
     const name = document.getElementById('m-name').value.trim();
-    if(!name){ alert('Name is required.'); return; }
-    const newUser = { id: uid(), name, isAdmin: document.getElementById('m-admin').checked };
+    const username = document.getElementById('m-username').value.trim().toLowerCase();
+    const password = document.getElementById('m-password').value;
+    if(!name || !username || !password){ alert('Name, username and a temporary password are all required.'); return; }
+    if(USERS.some(u=>(u.username||'').toLowerCase()===username)){ alert('That username is already taken.'); return; }
+    const newUser = { id: uid(), name, username, password, isAdmin: document.getElementById('m-admin').checked };
     USERS.push(newUser);
     state.team = USERS;
     logActivity(`added "${newUser.name}" to the team`);
     await saveStore(); closeModal(); renderPage();
+  });
+}
+function changePasswordModal(userId){
+  const target = USERS.find(u=>u.id===userId);
+  const isSelf = userId === currentUser.id;
+  openModal(`
+    <h3>${isSelf ? 'Change My Password' : `Reset Password — ${target.name}`}</h3>
+    ${isSelf ? `<div class="field"><label>Current Password</label><input type="password" id="pw-current"></div>` : ''}
+    <div class="field"><label>New Password</label><input type="password" id="pw-new"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancel-pw">Cancel</button>
+      <button class="btn-primary" id="save-pw">Save</button>
+    </div>`);
+  document.getElementById('cancel-pw').addEventListener('click', closeModal);
+  document.getElementById('save-pw').addEventListener('click', async ()=>{
+    if(isSelf){
+      const current = document.getElementById('pw-current').value;
+      if(current !== target.password){ alert('Current password is incorrect.'); return; }
+    }
+    const newPw = document.getElementById('pw-new').value;
+    if(!newPw || newPw.length < 4){ alert('New password must be at least 4 characters.'); return; }
+    target.password = newPw;
+    state.team = USERS;
+    logActivity(isSelf ? 'changed their password' : `reset the password for "${target.name}"`);
+    await saveStore(); closeModal();
+    alert('Password updated.');
   });
 }
 
